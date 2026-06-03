@@ -1,0 +1,52 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "title": "Cmpl Build Configuration",
+    "type": "object",
+    "required": ["project_name", "profiles"],
+    "properties": {
+        "project_name": {
+            "type": "string",
+            "description": "The name of your project"
+        },
+        "cmpl_version": {
+            "type": "string",
+            "description": "The target version of the Cmpl Builder."
+        },
+        "profiles": {
+            "type": "array",
+            "description": "A list of build configurations.",
+            "items": {
+                "type": "object",
+                "required": ["name", "build_system"],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Unique identifier for this build profile (e.g. windows-release)."
+                    },
+                    "build_system": {
+                        "type":"string",
+                        "description": "The build routing engine to use"
+                    },
+                    "toolchain": {
+                        "type": "string",
+                        "enum": ["msvc", "gcc", "clang"],
+                        "description": "The target compiler (required for 'direct' builds)."
+                    },
+                    "source_dir": {
+                        "type": "string",
+                        "description": "Path to the source code or solution/project file."
+                    },
+                    "output_dir": {
+                        "type": "string",
+                        "description": "Path where the build artifacts will be placed."
+                    },
+                    "flags": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Raw arguments passed directly to the compiler/tool"
+                    }
+                }
+            }
+        }
+    }
+}

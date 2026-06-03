@@ -1,0 +1,5 @@
+{
+  "yaml.schemas": {
+    "./cmpl.schema.json": "*.cmpl"
+  }
+}
