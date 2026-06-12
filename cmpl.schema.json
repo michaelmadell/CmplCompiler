@@ -1,0 +1,87 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "title": "Cmpl Build Configuration",
+    "type": "object",
+    "required": ["project_name", "profiles"],
+    "properties": {
+        "project_name": {
+            "type": "string",
+            "description": "The name of your project."
+        },
+        "cmpl_version": {
+            "type": "string",
+            "description": "The target version of the Cmpl Builder."
+        },
+        "environment": {
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+            "description": "Environment variables applied to every build process. Values are also available as ${NAME} tokens in profile strings."
+        },
+        "profiles": {
+            "type": "array",
+            "description": "A list of build configurations.",
+            "items": {
+                "type": "object",
+                "required": ["name", "build_system", "source_dir"],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Unique identifier for this build profile (e.g. windows-release)."
+                    },
+                    "build_system": {
+                        "type": "string",
+                        "enum": ["direct", "cmake", "dotnet", "msbuild"],
+                        "description": "The build routing engine to use."
+                    },
+                    "toolchain": {
+                        "type": "string",
+                        "description": "The target compiler for 'direct' builds: msvc, gcc, clang, or a custom compiler command/path."
+                    },
+                    "build_type": {
+                        "type": "string",
+                        "enum": ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                        "description": "Build configuration. Maps to -c for dotnet, CMAKE_BUILD_TYPE/--config for cmake, /p:Configuration for msbuild."
+                    },
+                    "dotnet_publish": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "For 'dotnet' builds, run 'dotnet publish' instead of 'dotnet build'."
+                    },
+                    "source_dir": {
+                        "type": "string",
+                        "description": "Path to the source code or solution/project file. Relative paths resolve against the .cmpl file's directory."
+                    },
+                    "output_dir": {
+                        "type": "string",
+                        "description": "Path where the build artifacts will be placed. Created if missing. Relative paths resolve against the .cmpl file's directory."
+                    },
+                    "include_dirs": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Header search paths for 'direct' builds (-I / /I)."
+                    },
+                    "defines": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Preprocessor definitions for 'direct' builds (-D / /D), or cache entries (-D) for cmake."
+                    },
+                    "flags": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Raw arguments passed directly to the compiler/tool."
+                    },
+                    "pre_build": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Shell commands run before the build, from the .cmpl file's directory."
+                    },
+                    "post_build": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Shell commands run after a successful build, from the .cmpl file's directory."
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="CmplPiler.Core/CmplPiler.Core.csproj" />
+  <Project Path="CmplPiler.Cli/CmplPiler.Cli.csproj" />
   <Project Path="CmplPiler/CmplPiler.csproj" />
 </Solution>

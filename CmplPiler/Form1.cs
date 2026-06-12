@@ -1,160 +1,95 @@
-using System.Diagnostics;
-using System.Threading.Tasks;
+using CmplPiler.Core;
 
 namespace CmplPiler
 {
     public partial class Form1 : Form
     {
-        private CmplProject _currentProject;
+        private CmplProject? _currentProject;
+        private CancellationTokenSource? _buildCts;
+
         public Form1()
         {
-            try
-            {
-                InitializeComponent();
-                this.Load += Form1_Load;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error initializing form: {ex.Message}\n\n{ex.StackTrace}", 
-                    "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                throw;
-            }
+            InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void btnLoad_Click(object? sender, EventArgs e)
         {
+            using OpenFileDialog openFileDialog = new();
+            openFileDialog.Filter = "Cmpl files (*.cmpl)|*.cmpl|All files (*.*)|*.*";
+
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
             try
             {
-                Log("Application started successfully");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error on form load: {ex.Message}", "Load Error", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+                _currentProject = CmplParser.LoadFile(openFileDialog.FileName);
+                this.Text = $"Cmpl Builder - {_currentProject.ProjectName}";
 
-        private void btnLoad_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new())
-            {
-                openFileDialog.Filter = "Cmpl files (*.cmpl)|*.cmpl|All files (*.*)|*.*";
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                cmbProfiles.Items.Clear();
+                foreach (var profile in _currentProject.Profiles)
                 {
-                    try
-                    {
-                        _currentProject = CmplParser.LoadFile(openFileDialog.FileName);
-                        this.Text = $"Cmpl Builder - {_currentProject.project_name}";
-
-                        cmbProfiles.Items.Clear();
-                        foreach (var profile in _currentProject.profiles)
-                        {
-                            cmbProfiles.Items.Add(profile.name);
-                        }
-                        if (cmbProfiles.Items.Count > 0)
-                        {
-                            cmbProfiles.SelectedIndex = 0;
-                        }
-
-                        Log("Project loaded successfully");
-                    }
-                    catch (Exception ex)
-                    {
-                        Log($"Error loading project: {ex.Message}");
-                    }
+                    cmbProfiles.Items.Add(profile.Name ?? "<unnamed>");
                 }
+                if (cmbProfiles.Items.Count > 0)
+                {
+                    cmbProfiles.SelectedIndex = 0;
+                }
+
+                Log($"Project '{_currentProject.ProjectName}' loaded ({_currentProject.Profiles.Count} profile(s))");
+            }
+            catch (Exception ex)
+            {
+                _currentProject = null;
+                cmbProfiles.Items.Clear();
+                Log($"Error loading project: {ex.Message}");
             }
         }
 
-        private async void btnBuild_Click(object sender, EventArgs e)
+        private async void btnBuild_Click(object? sender, EventArgs e)
         {
             if (_currentProject == null || cmbProfiles.SelectedIndex == -1) return;
 
-            string selectedProfileName = cmbProfiles.SelectedItem.ToString();
-            CmplProfile selectedProfile = _currentProject.profiles.Find(p => p.name == selectedProfileName);
-
-            var tasks = CommandGenerator.GenerateTasks(_currentProject, selectedProfile);
+            string? selectedProfileName = cmbProfiles.SelectedItem?.ToString();
+            CmplProfile? selectedProfile = _currentProject.Profiles.Find(p => p.Name == selectedProfileName);
+            if (selectedProfile == null) return;
 
             btnBuild.Enabled = false;
+            btnCancel.Enabled = true;
             txtOutput.Clear();
-            Log($"--- Starting Build Profile: {selectedProfile.name} ---");
+            Log($"--- Starting Build Profile: {selectedProfile.Name} ---");
 
-            foreach (var task in tasks)
+            var runner = new BuildRunner();
+            runner.OutputReceived += Log;
+            runner.ErrorReceived += Log;
+
+            _buildCts = new CancellationTokenSource();
+            try
             {
-                int exitCode = await RunProcessAsync(task.Command, task.Arguments);
-
-                if (exitCode != 0)
-                {
-                    Log($"\n[ERROR] Task failed with exit code {exitCode}. Stopping build.");
-                    break;
-                }
+                int exitCode = await runner.RunAsync(_currentProject, selectedProfile, _buildCts.Token);
+                Log(exitCode == 0
+                    ? "\n--- Build Sequence Completed ---"
+                    : $"\n[ERROR] Build failed with exit code {exitCode}.");
             }
-
-            Log("\n--- Build Sequence Completed ---");
-            btnBuild.Enabled = true;
+            catch (OperationCanceledException)
+            {
+                Log("\n--- Build Cancelled ---");
+            }
+            catch (Exception ex)
+            {
+                Log($"\n[ERROR] {ex.Message}");
+            }
+            finally
+            {
+                _buildCts.Dispose();
+                _buildCts = null;
+                btnBuild.Enabled = true;
+                btnCancel.Enabled = false;
+            }
         }
 
-        private Task<int> RunProcessAsync(string command, string arguments)
+        private void btnCancel_Click(object? sender, EventArgs e)
         {
-            var tcs = new TaskCompletionSource<int>();
-
-            Log($"\n> {command} {arguments}");
-
-            ProcessStartInfo startInfo = new()
-            {
-                FileName = command,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true,
-            };
-
-            Process process = new()
-            {
-                StartInfo = startInfo,
-                EnableRaisingEvents = true
-            };
-
-            process.OutputDataReceived += (s, ev) => { if (ev.Data != null) Log(ev.Data); };
-            process.ErrorDataReceived += (s, ev) => { if (ev.Data != null) Log($"ERROR: {ev.Data}"); };
-
-            process.Exited += (s, ev) =>
-            {
-                tcs.SetResult(process.ExitCode);
-                process.Dispose();
-            };
-
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            return tcs.Task;
-        }
-
-        private void RunProcess(string command, string arguments)
-        {
-            Log($"\n--- Running: {command} {arguments} ---");
-
-            ProcessStartInfo startInfo = new()
-            {
-                FileName = command,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true
-            };
-
-            Process process = new() { StartInfo = startInfo };
-
-            process.OutputDataReceived += (s, ev) => { if (ev.Data != null) Log(ev.Data); };
-            process.ErrorDataReceived += (s, ev) => { if (ev.Data != null) Log($"ERROR: {ev.Data}"); };
-
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
+            _buildCts?.Cancel();
         }
 
         private void Log(string message)
@@ -165,7 +100,6 @@ namespace CmplPiler
                 {
                     txtOutput.AppendText(message + Environment.NewLine);
                 }));
-
             }
             else
             {

@@ -1,0 +1,29 @@
+# Builds this repository's own CLI with itself — works on any OS with the
+# .NET SDK installed.
+project_name: "CmplPiler"
+cmpl_version: "1.0"
+
+profiles:
+  - name: "cli-release"
+    build_system: "dotnet"
+    dotnet_publish: true
+    build_type: "Release"
+    source_dir: "../CmplPiler.Cli/CmplPiler.Cli.csproj"
+    output_dir: "../build/cli-release"
+
+  - name: "cli-debug"
+    build_system: "dotnet"
+    build_type: "Debug"
+    source_dir: "../CmplPiler.Cli/CmplPiler.Cli.csproj"
+    output_dir: "../build/cli-debug"
+
+  # Windows-only: publishes the WinForms GUI as a single self-contained exe.
+  - name: "gui-windows-release"
+    build_system: "dotnet"
+    dotnet_publish: true
+    build_type: "Release"
+    source_dir: "../CmplPiler/CmplPiler.csproj"
+    output_dir: "../build/gui-windows-release"
+    flags:
+      - "--self-contained true"
+      - "/p:PublishSingleFile=true"

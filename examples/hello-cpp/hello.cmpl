@@ -1,0 +1,39 @@
+# Cross-platform direct compiler example.
+# Relative paths resolve against this file's directory, and ${VAR} tokens
+# expand from the environment map, built-ins, or OS environment variables.
+project_name: "hello"
+cmpl_version: "1.0"
+
+profiles:
+  - name: "gcc-release"
+    build_system: "direct"
+    toolchain: "gcc"
+    source_dir: "src"
+    output_dir: "build/gcc-release"
+    defines:
+      - "ENABLE_EXTRA"
+    flags:
+      - "-O2"
+      - "-Wall"
+    post_build:
+      - "echo Build of ${project_name} finished."
+
+  - name: "clang-debug"
+    build_system: "direct"
+    toolchain: "clang"
+    source_dir: "src"
+    output_dir: "build/clang-debug"
+    flags:
+      - "-g"
+      - "-Wall"
+
+  - name: "msvc-release"
+    build_system: "direct"
+    toolchain: "msvc"
+    source_dir: "src"
+    output_dir: "build/msvc-release"
+    defines:
+      - "ENABLE_EXTRA"
+    flags:
+      - "/O2"
+      - "/EHsc"
