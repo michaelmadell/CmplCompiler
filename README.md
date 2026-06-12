@@ -5,28 +5,42 @@ files. Describe *what* to build in named profiles; CmplPiler generates and
 runs the right commands for direct compiler invocation, CMake, the .NET CLI,
 or MSBuild.
 
-The repository contains three projects:
+It is a single application, `cmpl`, that multi-targets two frameworks:
 
-| Project | Description | Platforms |
+| Target | Contents | Platforms |
 | --- | --- | --- |
-| `CmplPiler.Core` | Parsing, validation, command generation and build execution | Windows, Linux, macOS |
-| `CmplPiler.Cli` | `cmpl` command-line front-end | Windows, Linux, macOS |
-| `CmplPiler` | Windows Forms GUI front-end | Windows |
+| `net10.0` | Command-line interface | Windows, Linux, macOS |
+| `net10.0-windows` | The same CLI **plus** the Windows Forms GUI | Windows |
+
+On the Windows build, launching `cmpl` with no arguments (or with `--gui`)
+opens the GUI; any other invocation behaves as a normal console tool. The
+non-Windows build is CLI-only. Internally the code is layered as
+`Core/` (parsing, validation, command generation, build execution),
+`Cli/` and `Gui/`, with `Gui/` compiled only for the Windows target.
 
 ## Getting started
 
-Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download). The
+solution builds on any OS (the Windows target cross-compiles on Linux/macOS
+via `EnableWindowsTargeting`).
 
 ```sh
 dotnet build CmplPiler.slnx
 
-# Run the CLI
-dotnet run --project CmplPiler.Cli -- examples/hello-cpp/hello.cmpl --list
-dotnet run --project CmplPiler.Cli -- examples/hello-cpp/hello.cmpl -p gcc-release
+# Run the CLI (multi-targeted projects need -f with dotnet run)
+dotnet run --project CmplPiler -f net10.0 -- examples/hello-cpp/hello.cmpl --list
+dotnet run --project CmplPiler -f net10.0 -- examples/hello-cpp/hello.cmpl -p gcc-release
 ```
 
-On Windows you can instead launch the `CmplPiler` GUI, pick a `.cmpl` file,
-choose a profile and press **Build Project**.
+### Publishing
+
+```sh
+# Cross-platform CLI
+dotnet publish CmplPiler -c Release -f net10.0
+
+# Windows build with GUI, single self-contained exe
+dotnet publish CmplPiler -c Release -f net10.0-windows -r win-x64 --self-contained /p:PublishSingleFile=true
+```
 
 ### CLI usage
 
@@ -36,11 +50,13 @@ cmpl <file.cmpl> [options]
   -p, --profile <name>   Build the named profile (default: first profile)
   -l, --list             List the profiles in the file and exit
   -n, --dry-run          Print the commands without running them
+      --gui              Open the graphical interface (Windows builds only)
   -h, --help             Show this help
 ```
 
 The CLI exits non-zero on failure, making it suitable for CI pipelines, and
-Ctrl+C cancels the build (killing the whole process tree).
+Ctrl+C cancels the build (killing the whole process tree). On Windows,
+`cmpl --gui path/to/project.cmpl` opens the GUI with the project preloaded.
 
 ## The .cmpl format
 
@@ -95,10 +111,10 @@ Key behaviours:
 
 See [`examples/`](examples/) for working samples, including
 [`self-host.cmpl`](examples/self-host.cmpl) which builds this repository's
-own CLI with itself:
+own `cmpl` with itself:
 
 ```sh
-dotnet run --project CmplPiler.Cli -- examples/self-host.cmpl -p cli-release
+dotnet run --project CmplPiler -f net10.0 -- examples/self-host.cmpl -p cli-release
 ```
 
 ## Editor support
