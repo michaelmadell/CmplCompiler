@@ -68,8 +68,10 @@ namespace CmplPiler.Core
 
             using Process process = new() { StartInfo = startInfo };
 
+            // stderr is streamed as-is: compilers send banners and progress
+            // there, so failure is judged by exit code, not by stream.
             process.OutputDataReceived += (_, ev) => { if (ev.Data != null) OutputReceived?.Invoke(ev.Data); };
-            process.ErrorDataReceived += (_, ev) => { if (ev.Data != null) ErrorReceived?.Invoke($"ERROR: {ev.Data}"); };
+            process.ErrorDataReceived += (_, ev) => { if (ev.Data != null) ErrorReceived?.Invoke(ev.Data); };
 
             try
             {
