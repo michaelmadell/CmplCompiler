@@ -7,9 +7,12 @@ namespace CmplPiler
         private CmplProject? _currentProject;
         private CancellationTokenSource? _buildCts;
 
-        public Form1()
+        public Form1(string? projectFile = null)
         {
             InitializeComponent();
+
+            if (projectFile != null)
+                this.Load += (_, _) => LoadProject(projectFile);
         }
 
         private void btnLoad_Click(object? sender, EventArgs e)
@@ -20,9 +23,14 @@ namespace CmplPiler
             if (openFileDialog.ShowDialog() != DialogResult.OK)
                 return;
 
+            LoadProject(openFileDialog.FileName);
+        }
+
+        private void LoadProject(string fileName)
+        {
             try
             {
-                _currentProject = CmplParser.LoadFile(openFileDialog.FileName);
+                _currentProject = CmplParser.LoadFile(fileName);
                 this.Text = $"Cmpl Builder - {_currentProject.ProjectName}";
 
                 cmbProfiles.Items.Clear();

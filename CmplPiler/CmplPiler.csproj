@@ -1,23 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <!-- net10.0 builds a pure CLI for any OS; net10.0-windows adds the WinForms GUI -->
+    <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>cmpl</AssemblyName>
+    <RootNamespace>CmplPiler</RootNamespace>
     <StartupObject>CmplPiler.Program</StartupObject>
-    <!-- Allows compiling (not running) the GUI on Linux/macOS build agents -->
+    <!-- Allows compiling (not running) the Windows target on Linux/macOS build agents -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="cmpl.schema.json" />
-    <None Remove="CmplTest.cmpl" />
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <!-- WinExe: no console window when the GUI is double-clicked; CLI mode
+         re-attaches to the parent console at startup -->
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0-windows'">
+    <Compile Remove="Gui/**" />
+    <EmbeddedResource Remove="Gui/**" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CmplPiler.Core\CmplPiler.Core.csproj" />
+    <PackageReference Include="YamlDotNet" Version="18.0.0" />
   </ItemGroup>
 
 </Project>

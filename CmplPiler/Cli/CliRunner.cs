@@ -2,7 +2,7 @@ using CmplPiler.Core;
 
 namespace CmplPiler.Cli
 {
-    internal static class Program
+    internal static class CliRunner
     {
         private const string Usage = """
             cmpl - build orchestrator for .cmpl project files
@@ -14,10 +14,11 @@ namespace CmplPiler.Cli
               -p, --profile <name>   Build the named profile (default: first profile)
               -l, --list             List the profiles in the file and exit
               -n, --dry-run          Print the commands without running them
+                  --gui              Open the graphical interface (Windows builds only)
               -h, --help             Show this help
             """;
 
-        private static async Task<int> Main(string[] args)
+        public static async Task<int> RunAsync(string[] args)
         {
             string? file = null;
             string? profileName = null;
@@ -31,6 +32,10 @@ namespace CmplPiler.Cli
                     case "-h" or "--help":
                         Console.WriteLine(Usage);
                         return 0;
+                    case "--gui":
+                        // Reaching here means the GUI branch in Program.Main
+                        // didn't run, i.e. this is not a Windows GUI build.
+                        return Fail("the GUI is only available in Windows builds of cmpl.");
                     case "-l" or "--list":
                         list = true;
                         break;
