@@ -134,8 +134,19 @@ dotnet run --project CmplPiler -- examples/self-host.cmpl -p cli-release
 
 ## Editor support
 
+### VS Code
+
+Install the **CMPL Build Files** extension
+([`editors/vscode-cmpl/`](editors/vscode-cmpl/)) for zero-config syntax
+highlighting, schema validation, autocomplete and hover docs on `.cmpl`
+files. It treats `*.cmpl` as YAML and applies `cmpl.schema.json`
+automatically (pulling in the Red Hat YAML extension as a dependency).
+
+### Other editors
+
 Associate `*.cmpl` with YAML and point your editor's YAML language server at
-`cmpl.schema.json` for completion and validation. In VS Code:
+`cmpl.schema.json` for completion and validation. In VS Code this is also
+achievable manually without the extension:
 
 ```json
 "yaml.schemas": { "./cmpl.schema.json": "*.cmpl" }

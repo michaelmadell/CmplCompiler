@@ -1,0 +1,8 @@
+# Sources and tooling that don't belong in the packaged .vsix.
+scripts/**
+media/**
+node_modules/**
+.gitignore
+.vscodeignore
+**/*.vsix
+package-lock.json

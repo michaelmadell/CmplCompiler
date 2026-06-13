@@ -3,6 +3,12 @@
 ###############################################################################
 * text=auto
 
+# .cmpl project files are YAML; keep LF endings.
+*.cmpl text eol=lf
+
+# Don't count the bundled editor tooling toward repo language stats.
+editors/vscode-cmpl/** linguist-vendored
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
