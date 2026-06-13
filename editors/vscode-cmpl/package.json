@@ -1,0 +1,60 @@
+{
+  "name": "cmpl-language",
+  "displayName": "CMPL Build Files",
+  "description": "Syntax highlighting and schema validation for .cmpl build orchestrator files.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "publisher": "cmpl-tools",
+  "//publisher": "TODO: replace 'cmpl-tools' with your real VS Code Marketplace publisher id before publishing.",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "cmpl",
+    "build",
+    "yaml",
+    "schema"
+  ],
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michaelmadell/cmplcompiler.git",
+    "directory": "editors/vscode-cmpl"
+  },
+  "bugs": {
+    "url": "https://github.com/michaelmadell/cmplcompiler/issues"
+  },
+  "extensionDependencies": [
+    "redhat.vscode-yaml"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "yaml",
+        "extensions": [
+          ".cmpl"
+        ]
+      }
+    ],
+    "yamlValidation": [
+      {
+        "fileMatch": "*.cmpl",
+        "url": "./schemas/cmpl.schema.json"
+      }
+    ]
+  },
+  "scripts": {
+    "sync-schema": "node scripts/sync-schema.mjs",
+    "vscode:prepublish": "npm run sync-schema",
+    "package": "npm run sync-schema && vsce package",
+    "publish": "npm run sync-schema && vsce publish"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.2.0",
+    "ovsx": "^0.10.0"
+  }
+}
