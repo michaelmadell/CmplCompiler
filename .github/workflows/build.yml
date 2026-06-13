@@ -19,23 +19,27 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Build solution (both target frameworks)
+      - name: Build solution (CLI target)
         run: dotnet build CmplPiler.slnx --configuration Release
 
       - name: Smoke test CLI (list, dry-run)
         run: |
-          dotnet run --project CmplPiler -f net10.0 --configuration Release -- examples/hello-cpp/hello.cmpl --list
-          dotnet run --project CmplPiler -f net10.0 --configuration Release -- examples/hello-cpp/hello.cmpl -p gcc-release --dry-run
+          dotnet run --project CmplPiler --configuration Release -- examples/hello-cpp/hello.cmpl --list
+          dotnet run --project CmplPiler --configuration Release -- examples/hello-cpp/hello.cmpl -p gcc-release --dry-run
 
       - name: Build example with gcc via cmpl
         if: runner.os == 'Linux'
         run: |
-          dotnet run --project CmplPiler -f net10.0 --configuration Release -- examples/hello-cpp/hello.cmpl -p gcc-release
+          dotnet run --project CmplPiler --configuration Release -- examples/hello-cpp/hello.cmpl -p gcc-release
           ./examples/hello-cpp/build/gcc-release/hello
 
       - name: Self-host build of the CLI
-        run: dotnet run --project CmplPiler -f net10.0 --configuration Release -- examples/self-host.cmpl -p cli-release
+        run: dotnet run --project CmplPiler --configuration Release -- examples/self-host.cmpl -p cli-release
 
-      - name: Publish Windows GUI single-file exe
+      - name: Publish self-contained Linux CLI
+        if: runner.os == 'Linux'
+        run: dotnet publish CmplPiler -c Release -r linux-x64 --self-contained /p:PublishSingleFile=true
+
+      - name: Publish self-contained Windows GUI (single file)
         if: runner.os == 'Windows'
-        run: dotnet publish CmplPiler -c Release -f net10.0-windows -r win-x64 --self-contained /p:PublishSingleFile=true
+        run: dotnet publish CmplPiler -c Release -r win-x64 --self-contained /p:PublishSingleFile=true

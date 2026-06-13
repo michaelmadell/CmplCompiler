@@ -1,5 +1,6 @@
-# Builds this repository's own cmpl with itself. The project multi-targets,
-# so each profile picks a framework with -f.
+# Builds this repository's own cmpl with itself. The target framework is
+# selected by the runtime identifier: a win-* RID pulls in the GUI, anything
+# else is the portable CLI.
 project_name: "CmplPiler"
 cmpl_version: "1.0"
 
@@ -7,31 +8,36 @@ profiles:
   # Cross-platform CLI build - works on any OS with the .NET SDK.
   - name: "cli-release"
     build_system: "dotnet"
-    dotnet_publish: true
     build_type: "Release"
     source_dir: "../CmplPiler/CmplPiler.csproj"
     output_dir: "../build/cli-release"
-    flags:
-      - "-f net10.0"
 
   - name: "cli-debug"
     build_system: "dotnet"
     build_type: "Debug"
     source_dir: "../CmplPiler/CmplPiler.csproj"
     output_dir: "../build/cli-debug"
-    flags:
-      - "-f net10.0"
 
-  # Windows build with the WinForms GUI, published as a single
-  # self-contained exe.
-  - name: "windows-release"
+  # Self-contained Linux CLI, single file.
+  - name: "linux-x64"
     build_system: "dotnet"
     dotnet_publish: true
     build_type: "Release"
     source_dir: "../CmplPiler/CmplPiler.csproj"
-    output_dir: "../build/windows-release"
+    output_dir: "../build/linux-x64"
     flags:
-      - "-f net10.0-windows"
+      - "-r linux-x64"
+      - "--self-contained true"
+      - "/p:PublishSingleFile=true"
+
+  # Self-contained Windows build with the WinForms GUI, single file.
+  - name: "windows-x64"
+    build_system: "dotnet"
+    dotnet_publish: true
+    build_type: "Release"
+    source_dir: "../CmplPiler/CmplPiler.csproj"
+    output_dir: "../build/windows-x64"
+    flags:
       - "-r win-x64"
       - "--self-contained true"
       - "/p:PublishSingleFile=true"

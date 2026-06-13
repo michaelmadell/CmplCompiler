@@ -2,8 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <!-- net10.0 builds a pure CLI for any OS; net10.0-windows adds the WinForms GUI -->
-    <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+
+    <!-- One target framework, selected by the platform you build/publish for.
+         A Windows runtime identifier (e.g. -r win-x64) selects the Windows
+         Desktop framework, which compiles in the WinForms GUI; every other
+         platform (and a plain build with no RID) is a portable CLI. -->
+    <TargetFramework Condition="$(RuntimeIdentifier.StartsWith('win'))">net10.0-windows</TargetFramework>
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
+
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>cmpl</AssemblyName>

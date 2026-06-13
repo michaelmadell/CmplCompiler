@@ -5,42 +5,57 @@ files. Describe *what* to build in named profiles; CmplPiler generates and
 runs the right commands for direct compiler invocation, CMake, the .NET CLI,
 or MSBuild.
 
-It is a single application, `cmpl`, that multi-targets two frameworks:
+It is a single application, `cmpl`, built from one project. The **target
+platform you publish for** decides the format:
 
-| Target | Contents | Platforms |
+| Publish for… | Framework (auto-selected) | Contents |
 | --- | --- | --- |
-| `net10.0` | Command-line interface | Windows, Linux, macOS |
-| `net10.0-windows` | The same CLI **plus** the Windows Forms GUI | Windows |
+| a Windows RID (`-r win-*`) | `net10.0-windows` | CLI **plus** the Windows Forms GUI |
+| anything else / no RID | `net10.0` | Command-line interface |
+
+There is no separate "GUI build" and "CLI build" to juggle: the runtime
+identifier selects the target framework, so a plain build and a Linux
+publish produce a portable CLI, while a `win-*` publish additionally
+compiles in the GUI. (A single *file* can't be both a Linux and a Windows
+executable — those are different formats, and WinForms only runs on
+Windows — so you publish one self-contained binary per platform.)
 
 On the Windows build, launching `cmpl` with no arguments (or with `--gui`)
-opens the GUI; any other invocation behaves as a normal console tool. The
-non-Windows build is CLI-only. Internally the code is layered as
-`Core/` (parsing, validation, command generation, build execution),
-`Cli/` and `Gui/`, with `Gui/` compiled only for the Windows target.
+opens the GUI; any other invocation behaves as a normal console tool.
+Internally the code is layered as `Core/` (parsing, validation, command
+generation, build execution), `Cli/` and `Gui/`, with `Gui/` compiled only
+for the Windows target.
 
 ## Getting started
 
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download). The
-solution builds on any OS (the Windows target cross-compiles on Linux/macOS
+project builds on any OS (the Windows target cross-compiles on Linux/macOS
 via `EnableWindowsTargeting`).
 
 ```sh
 dotnet build CmplPiler.slnx
 
-# Run the CLI (multi-targeted projects need -f with dotnet run)
-dotnet run --project CmplPiler -f net10.0 -- examples/hello-cpp/hello.cmpl --list
-dotnet run --project CmplPiler -f net10.0 -- examples/hello-cpp/hello.cmpl -p gcc-release
+# Run the CLI
+dotnet run --project CmplPiler -- examples/hello-cpp/hello.cmpl --list
+dotnet run --project CmplPiler -- examples/hello-cpp/hello.cmpl -p gcc-release
 ```
 
 ### Publishing
 
-```sh
-# Cross-platform CLI
-dotnet publish CmplPiler -c Release -f net10.0
+The same command shape produces one self-contained, single-file binary per
+platform — the RID picks CLI vs GUI automatically:
 
-# Windows build with GUI, single self-contained exe
-dotnet publish CmplPiler -c Release -f net10.0-windows -r win-x64 --self-contained /p:PublishSingleFile=true
+```sh
+# Linux CLI (ELF)
+dotnet publish CmplPiler -c Release -r linux-x64 --self-contained /p:PublishSingleFile=true
+
+# Windows CLI + GUI (single .exe)
+dotnet publish CmplPiler -c Release -r win-x64 --self-contained /p:PublishSingleFile=true
 ```
+
+> Developing the GUI in Visual Studio? The WinForms designer needs the
+> Windows target, so set `RuntimeIdentifier` to `win-x64` (or build with
+> `-r win-x64`) — a plain build defaults to the CLI-only `net10.0` target.
 
 ### CLI usage
 
@@ -114,7 +129,7 @@ See [`examples/`](examples/) for working samples, including
 own `cmpl` with itself:
 
 ```sh
-dotnet run --project CmplPiler -f net10.0 -- examples/self-host.cmpl -p cli-release
+dotnet run --project CmplPiler -- examples/self-host.cmpl -p cli-release
 ```
 
 ## Editor support
