@@ -37,6 +37,11 @@
                         "type": "string",
                         "description": "The target compiler for 'direct' builds: msvc, gcc, clang, or a custom compiler command/path."
                     },
+                    "arch": {
+                        "type": "string",
+                        "enum": ["x86", "x64", "arm64"],
+                        "description": "Target architecture for MSVC tooling (passed to VsDevCmd as -arch). Defaults to the host OS architecture."
+                    },
                     "build_type": {
                         "type": "string",
                         "enum": ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],

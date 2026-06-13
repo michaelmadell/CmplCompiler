@@ -82,8 +82,12 @@ Key behaviours:
 - **Toolchain mapping** for `direct` builds: `msvc` → `cl` (located via a
   Visual Studio developer prompt using `vswhere`), `gcc` → `g++`,
   `clang` → `clang++`, or any custom compiler command/path. MSVC-style
-  (`/I`, `/D`, `/Fe:`) vs GCC-style (`-I`, `-D`, `-o`) switches are chosen
-  automatically.
+  (`/I`, `/D`, `/Fo`, `/Fe:`) vs GCC-style (`-I`, `-D`, `-o`) switches are
+  chosen automatically, and object files land in `output_dir`.
+- **MSVC architecture**: the developer prompt is initialized with
+  `-arch`/`-host_arch` matching the host OS (VsDevCmd would otherwise
+  default to x86 tools). Override the target with `arch: x86 | x64 | arm64`
+  on the profile.
 - **`build_type` mapping**: `-c` for dotnet, `-DCMAKE_BUILD_TYPE` /
   `--config` for cmake, `/p:Configuration` for msbuild.
 - **dotnet publish**: set `dotnet_publish: true` to run `dotnet publish`

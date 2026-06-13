@@ -64,6 +64,28 @@ namespace CmplPiler.Core
                 ? Path.GetFullPath(Path.Combine(baseDir, path))
                 : path;
 
+        /// <summary>
+        /// Builds the "call VsDevCmd.bat ..." prefix. VsDevCmd defaults to
+        /// x86 tools, so the target/host architecture is passed explicitly
+        /// (profile 'arch' if set, otherwise the host OS architecture).
+        /// </summary>
+        private static string? GetVsDevCmdCall(CmplProfile profile)
+        {
+            string? devCmdPath = ToolLocator.GetVsDevCmdPath();
+            if (devCmdPath == null)
+                return null;
+
+            string hostArch = System.Runtime.InteropServices.RuntimeInformation.OSArchitecture switch
+            {
+                System.Runtime.InteropServices.Architecture.Arm64 => "arm64",
+                System.Runtime.InteropServices.Architecture.X86 => "x86",
+                _ => "x64"
+            };
+            string targetArch = profile.Arch ?? hostArch;
+
+            return $"call \"{devCmdPath}\" -arch={targetArch} -host_arch={hostArch}";
+        }
+
         private static BuildTask GenerateDirectTask(CmplProject project, CmplProfile profile)
         {
             string? baseDir = project.BaseDirectory;
@@ -96,7 +118,18 @@ namespace CmplPiler.Core
 
             // Keep the glob outside the quotes so the shell expands it
             args.Add($"\"{sourceDir}\"/*.cpp");
-            args.Add(msvc ? $"/Fe:\"{outputFile}\"" : $"-o \"{outputFile}\"");
+            if (msvc)
+            {
+                // Keep cl's .obj intermediates out of the working directory.
+                // The forward slash avoids a trailing backslash escaping the
+                // closing quote under cmd's argument rules.
+                args.Add($"/Fo\"{outputDir}/\"");
+                args.Add($"/Fe:\"{outputFile}\"");
+            }
+            else
+            {
+                args.Add($"-o \"{outputFile}\"");
+            }
 
             string commandLine = $"{compiler} {string.Join(" ", args)}";
 
@@ -104,12 +137,12 @@ namespace CmplPiler.Core
             // through VsDevCmd when we can find one.
             if (msvc && OperatingSystem.IsWindows())
             {
-                string? devCmdPath = ToolLocator.GetVsDevCmdPath();
-                if (devCmdPath != null)
+                string? devCmdCall = GetVsDevCmdCall(profile);
+                if (devCmdCall != null)
                     return new BuildTask
                     {
                         Command = "cmd.exe",
-                        Arguments = $"/c \"call \"{devCmdPath}\" && {commandLine}\"",
+                        Arguments = $"/c \"{devCmdCall} && {commandLine}\"",
                         WorkingDirectory = baseDir
                     };
             }
@@ -182,12 +215,12 @@ namespace CmplPiler.Core
 
             if (OperatingSystem.IsWindows())
             {
-                string? devCmdPath = ToolLocator.GetVsDevCmdPath();
-                if (devCmdPath != null)
+                string? devCmdCall = GetVsDevCmdCall(profile);
+                if (devCmdCall != null)
                     return new BuildTask
                     {
                         Command = "cmd.exe",
-                        Arguments = $"/c \"call \"{devCmdPath}\" && msbuild {finalArgs}\"",
+                        Arguments = $"/c \"{devCmdCall} && msbuild {finalArgs}\"",
                         WorkingDirectory = baseDir
                     };
 

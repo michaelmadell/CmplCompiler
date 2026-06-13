@@ -1,100 +1,64 @@
-using System.Diagnostics;
+using YamlDotNet.Serialization;
 
 namespace CmplPiler.Core
 {
-    /// <summary>
-    /// Executes the task pipeline for a profile, streaming output through
-    /// events so both the CLI and the GUI can share one implementation.
-    /// </summary>
-    public sealed class BuildRunner
+    public class CmplProject
     {
-        public event Action<string>? OutputReceived;
-        public event Action<string>? ErrorReceived;
+        public string? ProjectName { get; set; }
+        public string? CmplVersion { get; set; }
+        public Dictionary<string, string>? Environment { get; set; }
+        public List<CmplProfile> Profiles { get; set; } = new();
 
-        /// <summary>Runs all tasks for the profile. Returns the first non-zero exit code, or 0.</summary>
-        public async Task<int> RunAsync(CmplProject project, CmplProfile profile, CancellationToken cancellationToken = default)
-        {
-            var tasks = CommandGenerator.GenerateTasks(project, profile);
+        /// <summary>
+        /// Directory containing the .cmpl file. Relative paths in profiles are
+        /// resolved against this. Not part of the YAML document.
+        /// </summary>
+        [YamlIgnore]
+        public string? BaseDirectory { get; set; }
+    }
 
-            EnsureOutputDirectory(project, profile);
+    public class CmplProfile
+    {
+        public string? Name { get; set; }
+        public string? BuildSystem { get; set; }
+        public bool DotnetPublish { get; set; }
+        public string? BuildType { get; set; }
+        public string? Toolchain { get; set; }
 
-            foreach (var task in tasks)
-            {
-                OutputReceived?.Invoke($"> {task}");
+        /// <summary>Target architecture for MSVC tooling (x86, x64, arm64). Defaults to the host OS architecture.</summary>
+        public string? Arch { get; set; }
+        public string? SourceDir { get; set; }
+        public string? OutputDir { get; set; }
+        public List<string>? IncludeDirs { get; set; }
+        public List<string>? Defines { get; set; }
+        public List<string>? Flags { get; set; }
+        public List<string>? PreBuild { get; set; }
+        public List<string>? PostBuild { get; set; }
+    }
 
-                int exitCode = await RunProcessAsync(project, task, cancellationToken);
-                if (exitCode != 0)
-                    return exitCode;
-            }
+    public class BuildTask
+    {
+        public string Command { get; set; } = "";
 
-            return 0;
-        }
+        /// <summary>Raw argument string. Ignored when <see cref="ArgumentList"/> is set.</summary>
+        public string Arguments { get; set; } = "";
 
-        private static void EnsureOutputDirectory(CmplProject project, CmplProfile profile)
-        {
-            if (string.IsNullOrEmpty(profile.OutputDir))
-                return;
+        /// <summary>
+        /// Individual arguments passed without shell re-parsing. Preferred on
+        /// Unix where quoting rules differ from Windows.
+        /// </summary>
+        public List<string>? ArgumentList { get; set; }
 
-            string dir = profile.OutputDir;
-            if (project.BaseDirectory != null && !Path.IsPathRooted(dir))
-                dir = Path.Combine(project.BaseDirectory, dir);
+        public string? WorkingDirectory { get; set; }
 
-            Directory.CreateDirectory(dir);
-        }
+        public override string ToString() =>
+            ArgumentList != null
+                ? $"{Command} {string.Join(" ", ArgumentList)}"
+                : $"{Command} {Arguments}".TrimEnd();
+    }
 
-        private async Task<int> RunProcessAsync(CmplProject project, BuildTask task, CancellationToken cancellationToken)
-        {
-            ProcessStartInfo startInfo = new()
-            {
-                FileName = task.Command,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true,
-            };
-
-            if (task.ArgumentList != null)
-                foreach (var arg in task.ArgumentList)
-                    startInfo.ArgumentList.Add(arg);
-            else
-                startInfo.Arguments = task.Arguments;
-
-            if (!string.IsNullOrEmpty(task.WorkingDirectory))
-                startInfo.WorkingDirectory = task.WorkingDirectory;
-
-            if (project.Environment != null)
-                foreach (var (key, value) in project.Environment)
-                    startInfo.Environment[key] = value;
-
-            using Process process = new() { StartInfo = startInfo };
-
-            process.OutputDataReceived += (_, ev) => { if (ev.Data != null) OutputReceived?.Invoke(ev.Data); };
-            process.ErrorDataReceived += (_, ev) => { if (ev.Data != null) ErrorReceived?.Invoke($"ERROR: {ev.Data}"); };
-
-            try
-            {
-                process.Start();
-            }
-            catch (Exception ex)
-            {
-                ErrorReceived?.Invoke($"ERROR: Could not start '{task.Command}': {ex.Message}");
-                return -1;
-            }
-
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            try
-            {
-                await process.WaitForExitAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                try { process.Kill(entireProcessTree: true); } catch { /* already exited */ }
-                throw;
-            }
-
-            return process.ExitCode;
-        }
+    public class CmplValidationException : Exception
+    {
+        public CmplValidationException(string message) : base(message) { }
     }
 }
