@@ -50,22 +50,17 @@ copy /y "%WIN_GUI_EXE%" "%STAGING_DIR%\win\cmpl-gui.exe" >nul
 if exist "%REPO_ROOT%\LICENSE.txt" copy /y "%REPO_ROOT%\LICENSE.txt" "%STAGING_DIR%\win\" >nul
 if exist "%REPO_ROOT%\README.md" copy /y "%REPO_ROOT%\README.md" "%STAGING_DIR%\win\" >nul
 
-set "WIN_ZIP1=%DIST_DIR%\cmlp-x86_64-win.zip"
-set "WIN_ZIP2=%DIST_DIR%\cmpl-x86_64-win.zip"
-if exist "%WIN_ZIP1%" del /f /q "%WIN_ZIP1%"
-if exist "%WIN_ZIP2%" del /f /q "%WIN_ZIP2%"
+set "WIN_ZIP=%DIST_DIR%\cmpl-x86_64-win.zip"
+if exist "%WIN_ZIP%" del /f /q "%WIN_ZIP%"
 
-tar -a -cf "%WIN_ZIP1%" -C "%STAGING_DIR%\win" .
+tar -a -cf "%WIN_ZIP%" -C "%STAGING_DIR%\win" .
 if !ERRORLEVEL! neq 0 (
     echo Error: failed to create Windows zip archive
     exit /b !ERRORLEVEL!
 )
-copy /y "%WIN_ZIP1%" "%WIN_ZIP2%" >nul
-copy /y "%WIN_ZIP1%" "%BUILD_DIR%\cmlp-x86_64-win.zip" >nul
-copy /y "%WIN_ZIP2%" "%BUILD_DIR%\cmpl-x86_64-win.zip" >nul
+copy /y "%WIN_ZIP%" "%BUILD_DIR%\cmpl-x86_64-win.zip" >nul
 
-echo Created: %WIN_ZIP1%
-echo Created: %WIN_ZIP2%
+echo Created: %WIN_ZIP%
 
 echo Packaging Linux release...
 copy /y "%LINUX_CLI%" "%STAGING_DIR%\linux\cmpl" >nul

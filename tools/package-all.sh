@@ -50,24 +50,20 @@ cp "$WIN_GUI_EXE" "$STAGING_DIR/win/cmpl-gui.exe"
 [ -f "$REPO_ROOT/LICENSE.txt" ] && cp "$REPO_ROOT/LICENSE.txt" "$STAGING_DIR/win/"
 [ -f "$REPO_ROOT/README.md" ] && cp "$REPO_ROOT/README.md" "$STAGING_DIR/win/"
 
-WIN_ZIP1="$DIST_DIR/cmlp-x86_64-win.zip"
-WIN_ZIP2="$DIST_DIR/cmpl-x86_64-win.zip"
-rm -f "$WIN_ZIP1" "$WIN_ZIP2"
+WIN_ZIP="$DIST_DIR/cmpl-x86_64-win.zip"
+rm -f "$WIN_ZIP"
 
 if command -v zip >/dev/null 2>&1; then
-    (cd "$STAGING_DIR/win" && zip -q -r "$WIN_ZIP1" .)
+    (cd "$STAGING_DIR/win" && zip -q -r "$WIN_ZIP" .)
 elif command -v tar >/dev/null 2>&1; then
-    tar -a -cf "$WIN_ZIP1" -C "$STAGING_DIR/win" .
+    tar -a -cf "$WIN_ZIP" -C "$STAGING_DIR/win" .
 else
     echo "Error: neither zip nor tar found to create Windows zip archive" >&2
     exit 1
 fi
-cp -f "$WIN_ZIP1" "$WIN_ZIP2"
-cp -f "$WIN_ZIP1" "$BUILD_DIR/cmlp-x86_64-win.zip"
-cp -f "$WIN_ZIP2" "$BUILD_DIR/cmpl-x86_64-win.zip"
+cp -f "$WIN_ZIP" "$BUILD_DIR/cmpl-x86_64-win.zip"
 
-echo "Created: $WIN_ZIP1"
-echo "Created: $WIN_ZIP2"
+echo "Created: $WIN_ZIP"
 
 # Package Linux
 echo "Packaging Linux release..."

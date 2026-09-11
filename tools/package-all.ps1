@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Packages Windows and Linux release binaries into distributable archives:
-- cmlp-x86_64-win.zip (and cmpl-x86_64-win.zip)
+- cmpl-x86_64-win.zip
 - cmpl-x86_64-linux.tar.gz
 #>
 
@@ -61,25 +61,18 @@ if (Test-Path (Join-Path $RepoRoot "README.md")) {
     Copy-Item (Join-Path $RepoRoot "README.md") $WinStaging
 }
 
-$WinZipName1 = "cmlp-x86_64-win.zip"
-$WinZipName2 = "cmpl-x86_64-win.zip"
-$WinZipDist1 = Join-Path $DistDir $WinZipName1
-$WinZipDist2 = Join-Path $DistDir $WinZipName2
-$WinZipBuild1 = Join-Path $BuildDir $WinZipName1
-$WinZipBuild2 = Join-Path $BuildDir $WinZipName2
+$WinZipName = "cmpl-x86_64-win.zip"
+$WinZipDist = Join-Path $DistDir $WinZipName
+$WinZipBuild = Join-Path $BuildDir $WinZipName
 
-if (Test-Path $WinZipDist1) { Remove-Item -Force $WinZipDist1 }
-if (Test-Path $WinZipDist2) { Remove-Item -Force $WinZipDist2 }
+if (Test-Path $WinZipDist) { Remove-Item -Force $WinZipDist }
 
 # Create zip from staging folder contents
 $winFiles = Get-ChildItem -Path $WinStaging | Select-Object -ExpandProperty FullName
-Compress-Archive -Path $winFiles -DestinationPath $WinZipDist1 -Force
-Copy-Item $WinZipDist1 $WinZipDist2 -Force
-Copy-Item $WinZipDist1 $WinZipBuild1 -Force
-Copy-Item $WinZipDist2 $WinZipBuild2 -Force
+Compress-Archive -Path $winFiles -DestinationPath $WinZipDist -Force
+Copy-Item $WinZipDist $WinZipBuild -Force
 
-Write-Host "Created: $WinZipDist1" -ForegroundColor Green
-Write-Host "Created: $WinZipDist2" -ForegroundColor Green
+Write-Host "Created: $WinZipDist" -ForegroundColor Green
 
 # 4. Package Linux release
 Write-Host "Packaging Linux release..." -ForegroundColor Cyan
