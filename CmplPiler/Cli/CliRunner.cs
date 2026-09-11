@@ -1,22 +1,38 @@
-using CmplPiler.Core;
+﻿using CmplPiler.Core;
+using System.Text;
 
 namespace CmplPiler.Cli
 {
     internal static class CliRunner
     {
-        private const string Usage = """
-            cmpl - build orchestrator for .cmpl project files
+        private const string E = "\u001b";
+        private const string G = $"{E}[32m";
+        private const string R = $"{E}[31m";
+        private const string Bld = $"{E}[1m";
+        private const string Rst = $"{E}[0m";
+        private const string B = $"{E}[5m";
+        private const string Usage = $"""
 
-            Usage:
-              cmpl <file.cmpl> [options]
-
-            Options:
-              -p, --profile <name>   Build the named profile (default: first profile)
-              -l, --list             List the profiles in the file and exit
-              -n, --dry-run          Print the commands without running them
-                  --gui              Open the graphical interface (Windows builds only)
-              -h, --help             Show this help
-            """;
+╭─ cmpl - build orchestrator for .cmpl project files ────────────────────────────────╮
+│                                                                                    │
+│  ╭─ Usage: ─────────────────────────────────────────────────────────────────────╮  │
+│  │                                                                              │  │
+│  │    cmpl <file.cmpl> [options]                                                │  │
+│  │                                                                              │  │
+│  ╰──────────────────────────────────────────────────────────────────────────────╯  │
+│                                                                                    │
+│  ╭─ Options: ───────────────────────────────────────────────────────────────────╮  │
+│  │                                                                              │  │
+│  │    -p, --profile <name>   Build the named profile (default: first profile)   │  │
+│  │    -l, --list             List the profiles in the file and exit             │  │
+│  │    -n, --dry-run          Print the commands without running them            │  │
+│  │        --gui              Open the graphical interface (Windows builds only) │  │
+│  │    -h, --help             Show this help                                     │  │
+│  │                                                                              │  │
+│  ╰──────────────────────────────────────────────────────────────────────────────╯  │
+│                                                                                    │
+╰─────────────────────────────────────────────────────────────────── Michael Madell ─╯
+""";
 
         public static async Task<int> RunAsync(string[] args)
         {
@@ -56,12 +72,16 @@ namespace CmplPiler.Cli
                         break;
                 }
             }
+            
+            Console.OutputEncoding = Encoding.UTF8;
 
             if (file == null)
             {
                 Console.WriteLine(Usage);
                 return 1;
             }
+
+            
 
             CmplProject project;
             try
@@ -110,8 +130,8 @@ namespace CmplPiler.Cli
             {
                 int exitCode = await runner.RunAsync(project, profile, cts.Token);
                 Console.WriteLine(exitCode == 0
-                    ? "--- Build succeeded ---"
-                    : $"--- Build failed (exit code {exitCode}) ---");
+                    ? BuildSucceeded()
+                    : BuildFailed(exitCode));
                 return exitCode == 0 ? 0 : 1;
             }
             catch (OperationCanceledException)
@@ -123,6 +143,38 @@ namespace CmplPiler.Cli
             {
                 return Fail(ex.Message);
             }
+        }
+
+        private static string BuildSucceeded()
+        {
+            return $"""
+                ╭────────────────────────────────── BUILD RESULT ────────────────────────────────────╮
+                │                                                                                    │
+                │                             {Bld}{B}!!!{Rst} {Bld}{G}BUILD SUCCEEDED{Rst} {Bld}{B}!!!{Rst}                                │
+                │                                                                                    │
+                ╰────────────────────────────────────────────────────────────────────────────────────╯
+                """;
+        }
+
+        private static string BuildFailed(int exitCode)
+        {
+            const int innerWidth = 84; // width between the two border characters
+
+            string exitCodeText = exitCode.ToString();
+            string centeredExitCode = exitCodeText
+                .PadLeft((innerWidth + exitCodeText.Length) / 2)
+                .PadRight(innerWidth);
+
+            return $"""
+        ╭────────────────────────────────── BUILD RESULT ────────────────────────────────────╮
+        │                                                                                    │
+        │                               {Bld}{B}!!!{Rst} {Bld}{R}BUILD FAILED{Rst} {Bld}{B}!!!{Rst}                                 │
+        │                                                                                    │
+        │                                    EXIT CODE:                                      │
+        │{centeredExitCode}│
+        │                                                                                    │
+        ╰────────────────────────────────────────────────────────────────────────────────────╯
+        """;
         }
 
         private static int Fail(string message)
