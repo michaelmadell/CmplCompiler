@@ -18,6 +18,18 @@ profiles:
     source_dir: "../CmplPiler/CmplPiler.csproj"
     output_dir: "../build/cli-debug"
 
+  - name: "win-cli"
+    build_system: "dotnet"
+    dotnet_publish: true
+    build_type: "Release"
+    source_dir: "../CmplPiler/CmplPiler.csproj"
+    output_dir: "../build/win-cli"
+    flags:
+      - "-r win-x64"
+      - "-p:IncludeGui=false"
+      - "--self-contained true"
+      - "-p:PublishSingleFile=true"
+
   # Self-contained Linux CLI, single file.
   - name: "linux-x64"
     build_system: "dotnet"
@@ -28,7 +40,18 @@ profiles:
     flags:
       - "-r linux-x64"
       - "--self-contained true"
-      - "/p:PublishSingleFile=true"
+      - "-p:PublishSingleFile=true"
+
+  - name: "linux-cli"
+    build_system: "dotnet"
+    dotnet_publish: true
+    build_type: "Release"
+    source_dir: "../CmplPiler/CmplPiler.csproj"
+    output_dir: "../build/linux-cli"
+    flags:
+      - "-r linux-x64"
+      - "--self-contained true"
+      - "-p:PublishSingleFile=true"
 
   # Self-contained Windows build with the WinForms GUI, single file.
   - name: "windows-x64"
@@ -40,4 +63,15 @@ profiles:
     flags:
       - "-r win-x64"
       - "--self-contained true"
-      - "/p:PublishSingleFile=true"
+      - "-p:PublishSingleFile=true"
+
+  - name: "win-gui"
+    build_system: "dotnet"
+    dotnet_publish: true
+    build_type: "Release"
+    source_dir: "../CmplPiler/CmplPiler.csproj"
+    output_dir: "../build/win-gui"
+    flags:
+      - "-r win-x64"
+      - "--self-contained true"
+      - "-p:PublishSingleFile=true"
