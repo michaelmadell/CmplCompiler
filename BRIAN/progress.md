@@ -7,8 +7,11 @@
 | **YAML Parsing & Model Binding** | ✅ Complete | Uses YamlDotNet with snake_case naming convention and extra-property tolerance |
 | **Validation & Error Reporting** | ✅ Complete | Strict invariant checking with clear error messaging for missing or invalid configuration |
 | **Variable Expansion** | ✅ Complete | Supports `${project_name}`, `${base_dir}`, project `environment` map, and system environment variables |
-| **Direct Toolchain (MSVC)** | ✅ Complete | Automatic `vswhere` detection, `VsDevCmd.bat` wrapping with arch flags, `/Fo` intermediate isolation |
-| **Direct Toolchain (GCC/Clang)** | ✅ Complete | Automatic argument mapping (`-I`, `-D`, `-o`) and shell wildcard expansion |
+| **Direct Toolchain (MSVC)** | ✅ Complete | Automatic `vswhere` detection, `VsDevCmd.bat` wrapping with arch flags, `/Fo` intermediate isolation, and response file support |
+| **Direct Toolchain (GCC/Clang)** | ✅ Complete | Automatic argument mapping (`-I`, `-D`, `-o`), flexible `sources` matching, and response file support |
+| **Flexible Source Matching** | ✅ Complete | Multi-extension, explicit source lists, recursive globbing (`**/*.cpp`), and backwards-compatible fallback |
+| **Compiler Response Files** | ✅ Complete | `@args.rsp` generation via `use_response_file` or auto-triggering on > 2048 char command lines |
+| **Profile-Level Environment** | ✅ Complete | Profile-level `environment` dictionary with variable expansion and process environment override |
 | **CMake Integration** | ✅ Complete | Generates config (`-B`, `-S`, `-DCMAKE_BUILD_TYPE`) and build (`--build`, `--config`) tasks |
 | **.NET CLI Integration** | ✅ Complete | Generates `dotnet build` and `dotnet publish` with configuration and output flags |
 | **MSBuild Integration** | ✅ Complete | Supports `VsDevCmd` MSBuild on Windows and `dotnet msbuild` on Unix |
@@ -42,21 +45,20 @@
 
 ## Known Limitations & Technical Debt
 
-1. **Direct Compilation File Scope**:
-   - Current implementation appends `"<sourceDir>"/*.cpp`. It does not recurse into subdirectories or support alternative C/C++ extensions (`.c`, `.cc`, `.cxx`) without manual flags.
-2. **Rebuild / Incremental Behavior**:
+1. **Rebuild / Incremental Behavior**:
    - In `direct` build system mode, every execution invokes the compiler on all matching source files; no internal dependency graph or caching is maintained (relies on underlying tools for `cmake`/`dotnet`/`msbuild`).
-3. **Automated Test Harness**:
+2. **Automated Test Harness**:
    - There is no dedicated test project (e.g. `CmplPiler.Tests.csproj`) with unit tests covering edge cases in parser validation, variable recursion, or shell command escaping. Tests currently rely on end-to-end smoke testing in CI.
-4. **macOS Support**:
+3. **macOS Support**:
    - While the code avoids Windows-only constructs outside `Gui` and uses `/bin/sh` for Unix, dedicated macOS packaging scripts and CI matrix jobs are not yet configured.
 
 ---
 
 ## Future Roadmap Ideas
 
-- [ ] Add support for custom source patterns/globs or explicit source lists in `direct` profiles.
+- [x] Add support for custom source patterns/globs or explicit source lists in `direct` profiles.
+- [x] Add response file (`@args.rsp`) generation for direct builds with extensive argument lists.
+- [x] Support profile-level environment variable overrides.
 - [ ] Implement a unit test suite for `CmplParser`, `CommandGenerator`, and variable substitution.
-- [ ] Add response file (`@args.rsp`) generation for direct builds with extensive argument lists on Windows.
 - [ ] Add macOS targets and packaging (`.tar.gz`) to `tools/` and GitHub Actions.
 - [ ] Publish the VS Code extension to the Visual Studio Marketplace and Open VSX Registry.

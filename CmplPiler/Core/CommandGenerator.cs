@@ -133,7 +133,24 @@ namespace CmplPiler.Core
                 args.Add($"-o \"{outputFile}\"");
             }
 
-            string commandLine = $"{compiler} {string.Join(" ", args)}";
+            string argsString = string.Join(" ", args);
+            bool shouldUseRsp = (profile.UseResponseFile || argsString.Length > 2048)
+                && (profile.Toolchain is "msvc" or "gcc" or "clang");
+
+            string commandLine;
+            string? rspPath = null;
+            string? rspContent = null;
+
+            if (shouldUseRsp)
+            {
+                rspPath = Path.Combine(outputDir, $"{project.ProjectName}.rsp");
+                rspContent = string.Join(Environment.NewLine, args);
+                commandLine = $"{compiler} @\"{rspPath}\"";
+            }
+            else
+            {
+                commandLine = $"{compiler} {argsString}";
+            }
 
             // MSVC's cl is only on PATH inside a developer prompt, so route
             // through VsDevCmd when we can find one.
@@ -145,13 +162,16 @@ namespace CmplPiler.Core
                     {
                         Command = "cmd.exe",
                         Arguments = $"/c \"{devCmdCall} && {commandLine}\"",
-                        WorkingDirectory = baseDir
+                        WorkingDirectory = baseDir,
+                        ResponseFilePath = rspPath,
+                        ResponseFileContent = rspContent
                     };
             }
 
-            // The shell expands the *.cpp glob (MSVC and MinGW expand it
-            // themselves, but Unix compilers rely on the shell).
-            return ShellTask(commandLine, baseDir);
+            var task = ShellTask(commandLine, baseDir);
+            task.ResponseFilePath = rspPath;
+            task.ResponseFileContent = rspContent;
+            return task;
         }
 
         private static List<BuildTask> GenerateCmakeTasks(CmplProfile profile, string? baseDir)

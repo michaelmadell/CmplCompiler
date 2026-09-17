@@ -56,6 +56,15 @@ namespace CmplPiler.Core
 
         private async Task<int> RunProcessAsync(IReadOnlyDictionary<string, string> environment, BuildTask task, CancellationToken cancellationToken)
         {
+            if (!string.IsNullOrEmpty(task.ResponseFilePath) && task.ResponseFileContent != null)
+            {
+                string? rspDir = Path.GetDirectoryName(task.ResponseFilePath);
+                if (!string.IsNullOrEmpty(rspDir))
+                    Directory.CreateDirectory(rspDir);
+
+                await File.WriteAllTextAsync(task.ResponseFilePath, task.ResponseFileContent, cancellationToken);
+            }
+
             ProcessStartInfo startInfo = new()
             {
                 FileName = task.Command,

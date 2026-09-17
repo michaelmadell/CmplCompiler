@@ -6,20 +6,20 @@ This document tracks identified architectural, functional, and developer experie
 
 ## 1. Core Engine & Direct Compilation
 
-- [ ] **1.A: Flexible Source Matching (Multi-extension & Globs)**
-  - *Current State*: Hardcoded to `"<sourceDir>"/*.cpp`. Does not support `.c`, `.cc`, `.cxx`, subdirectories (`src/**/*.cpp`), or explicit source lists.
-  - *Improvement*: Add an optional `sources` list to `CmplProfile` and `cmpl.schema.json`. If omitted, default to `["*.cpp"]` for backwards compatibility. Support relative paths and globs.
+- [x] **1.A: Flexible Source Matching (Multi-extension & Globs)**
+  - *Current State*: Resolved. Added `sources` list to `CmplProfile` and `cmpl.schema.json`. Supports explicit files, relative paths, and globs (`*.cpp`, `*.c`, `**/*.cpp`) with automatic backwards-compatible fallback.
+  - *Improvement*: Added `sources` list to `CmplProfile` and `cmpl.schema.json`. If omitted, default to `["*.cpp"]` for backwards compatibility. Support relative paths and globs.
 
-- [ ] **1.B: Quote Custom Compiler Paths**
-  - *Current State*: Custom compiler paths containing spaces (e.g. `C:\Program Files\LLVM\bin\clang++.exe`) are inserted unquoted into shell command strings, causing execution failure.
+- [x] **1.B: Quote Custom Compiler Paths**
+  - *Current State*: Resolved. Compiler paths containing spaces are automatically enclosed in quotes in `CommandGenerator.GenerateDirectTask`.
   - *Improvement*: Ensure any compiler path with spaces or custom paths are properly quoted when constructing the command line.
 
-- [ ] **1.C: Profile-Level Environment Variables**
-  - *Current State*: `environment` map is only defined at the project level (`CmplProject`).
+- [x] **1.C: Profile-Level Environment Variables**
+  - *Current State*: Resolved. `environment` map is now supported at profile level in `CmplProfile` and `cmpl.schema.json`, merging with and overriding project-level environment during variable expansion and process execution.
   - *Improvement*: Allow `environment` in `CmplProfile`. Merge/override project-level variables with profile-level variables during variable expansion and process execution.
 
-- [ ] **1.D: Response File (`@args.rsp`) Support for Direct Builds**
-  - *Current State*: Large argument lists risk exceeding Windows `cmd.exe` command length limits (8,191 characters).
+- [x] **1.D: Response File (`@args.rsp`) Support for Direct Builds**
+  - *Current State*: Resolved. Added `use_response_file` option to `CmplProfile` and `cmpl.schema.json`, plus auto-switching when direct toolchain arguments exceed 2,048 characters. `BuildRunner` writes the `.rsp` file prior to execution.
   - *Improvement*: Generate a compiler response file (`.rsp`) when arguments exceed command-line limits or by default during direct builds.
 
 ---

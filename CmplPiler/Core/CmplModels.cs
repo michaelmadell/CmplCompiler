@@ -34,6 +34,7 @@ namespace CmplPiler.Core
         public List<string>? Defines { get; set; }
         public List<string>? Flags { get; set; }
         public Dictionary<string, string>? Environment { get; set; }
+        public bool UseResponseFile { get; set; }
         public List<string>? PreBuild { get; set; }
         public List<string>? PostBuild { get; set; }
     }
@@ -52,6 +53,12 @@ namespace CmplPiler.Core
         public List<string>? ArgumentList { get; set; }
 
         public string? WorkingDirectory { get; set; }
+
+        /// <summary>Optional response file path to write before running the process.</summary>
+        public string? ResponseFilePath { get; set; }
+
+        /// <summary>Optional content to write to the response file.</summary>
+        public string? ResponseFileContent { get; set; }
 
         public override string ToString() =>
             ArgumentList != null

@@ -25,7 +25,11 @@ Based on recent commit history and repository files:
 5. **MSVC Tooling Fixes (`085c948`)**:
    - Added `-arch` and `-host_arch` to `VsDevCmd.bat` initialization to prevent defaulting to x86 compilers on 64-bit systems.
    - Directed MSVC intermediate object files into `output_dir` via `/Fo` switch to keep the source tree clean.
-   - Stopped classifying stderr output as fatal errors, accommodating compilers that write informational headers or progress to stderr.
+6. **Core Engine & Direct Compilation Enhancements (Section 1)**:
+   - Added `sources` globbing/pattern matching supporting explicit files, subdirectories, and recursive globs (`**/*.cpp`, `*.c`, etc.) with backwards-compatible fallback.
+   - Enclosed custom compiler paths containing spaces in quotes to prevent shell execution syntax errors.
+   - Implemented profile-level `environment` overrides in model, schema, variable expansion, and process start info.
+   - Implemented response file (`@args.rsp`) support via `use_response_file` configuration and automatic switching for direct toolchain invocations exceeding 2,048 characters.
 
 ---
 
@@ -38,10 +42,13 @@ Based on recent commit history and repository files:
 - **Variable Expansion Priority**:
   - `${VAR}` lookup precedence is strictly defined:
     1. Built-in constants (`project_name`, `base_dir`)
-    2. Project configuration `environment` dictionary
-    3. Host system environment variables
-- **Direct C++ Toolchain Compilation**:
-  - Direct builds currently assemble compiler calls assuming all `.cpp` files in `source_dir` are to be compiled (`"<sourceDir>"/*.cpp`).
+    2. Profile-level `environment` dictionary (if set)
+    3. Project-level `environment` dictionary
+    4. Host system environment variables
+- **Direct C++ Source Resolution**:
+  - Direct builds resolve source files through `ResolveSourceArguments`. If matching files exist on disk, their full paths are passed explicitly. If not found or when pattern globbing is relied upon, it safely falls back to formatted shell glob patterns.
+- **Compiler Response Files**:
+  - Direct compiler invocations with `msvc`, `gcc`, or `clang` automatically generate a `.rsp` file in the output directory if `use_response_file: true` or if argument length exceeds 2,048 characters, preventing `cmd.exe` command length limitations.
 
 ---
 

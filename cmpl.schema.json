@@ -52,6 +52,11 @@
                         "default": false,
                         "description": "For 'dotnet' builds, run 'dotnet publish' instead of 'dotnet build'."
                     },
+                    "use_response_file": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "For 'direct' builds, write compiler arguments to a response file (@args.rsp) to avoid command-line length limits."
+                    },
                     "source_dir": {
                         "type": "string",
                         "description": "Path to the source code or solution/project file. Relative paths resolve against the .cmpl file's directory."
