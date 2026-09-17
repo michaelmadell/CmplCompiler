@@ -32,6 +32,7 @@ namespace CmplPiler.Core
         public List<string>? IncludeDirs { get; set; }
         public List<string>? Defines { get; set; }
         public List<string>? Flags { get; set; }
+        public Dictionary<string, string>? Environment { get; set; }
         public List<string>? PreBuild { get; set; }
         public List<string>? PostBuild { get; set; }
     }

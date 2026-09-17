@@ -18,11 +18,23 @@ namespace CmplPiler.Core
 
             EnsureOutputDirectory(project, profile);
 
+            Dictionary<string, string> mergedEnv = new();
+            if (project.Environment != null)
+            {
+                foreach (var (k, v) in project.Environment)
+                    mergedEnv[k] = v;
+            }
+            if (profile.Environment != null)
+            {
+                foreach (var (k, v) in profile.Environment)
+                    mergedEnv[k] = v;
+            }
+
             foreach (var task in tasks)
             {
                 OutputReceived?.Invoke($"> {task}");
 
-                int exitCode = await RunProcessAsync(project, task, cancellationToken);
+                int exitCode = await RunProcessAsync(mergedEnv, task, cancellationToken);
                 if (exitCode != 0)
                     return exitCode;
             }
@@ -42,7 +54,7 @@ namespace CmplPiler.Core
             Directory.CreateDirectory(dir);
         }
 
-        private async Task<int> RunProcessAsync(CmplProject project, BuildTask task, CancellationToken cancellationToken)
+        private async Task<int> RunProcessAsync(IReadOnlyDictionary<string, string> environment, BuildTask task, CancellationToken cancellationToken)
         {
             ProcessStartInfo startInfo = new()
             {
@@ -62,8 +74,8 @@ namespace CmplPiler.Core
             if (!string.IsNullOrEmpty(task.WorkingDirectory))
                 startInfo.WorkingDirectory = task.WorkingDirectory;
 
-            if (project.Environment != null)
-                foreach (var (key, value) in project.Environment)
+            if (environment.Count > 0)
+                foreach (var (key, value) in environment)
                     startInfo.Environment[key] = value;
 
             using Process process = new() { StartInfo = startInfo };

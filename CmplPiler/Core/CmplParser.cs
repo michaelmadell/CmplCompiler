@@ -76,12 +76,13 @@ namespace CmplPiler.Core
 
         /// <summary>
         /// Expands ${VAR} tokens in all profile strings. Lookup order:
-        /// built-ins (project_name, base_dir), the project's 'environment'
-        /// map, then OS environment variables. Unknown tokens are left as-is.
+        /// built-ins (project_name, base_dir), the profile's 'environment' map,
+        /// the project's 'environment' map, then OS environment variables.
+        /// Unknown tokens are left as-is.
         /// </summary>
         public static void ExpandVariables(CmplProject project)
         {
-            string? Lookup(string name) => name switch
+            string? ProjectLookup(string name) => name switch
             {
                 "project_name" => project.ProjectName,
                 "base_dir" => project.BaseDirectory,
@@ -90,13 +91,46 @@ namespace CmplPiler.Core
                         : Environment.GetEnvironmentVariable(name)
             };
 
-            string? Expand(string? value) =>
-                value == null ? null : VariablePattern.Replace(value, m => Lookup(m.Groups[1].Value) ?? m.Value);
+            string? ExpandWith(string? value, Func<string, string?> lookup) =>
+                value == null ? null : VariablePattern.Replace(value, m => lookup(m.Groups[1].Value) ?? m.Value);
 
-            List<string>? ExpandList(List<string>? values) => values?.Select(v => Expand(v)!).ToList();
+            // Expand values within the project environment map
+            if (project.Environment != null)
+            {
+                foreach (var key in project.Environment.Keys.ToList())
+                {
+                    project.Environment[key] = ExpandWith(project.Environment[key], ProjectLookup)!;
+                }
+            }
 
             foreach (var profile in project.Profiles)
             {
+                // Expand values within the profile environment map using project lookup first
+                if (profile.Environment != null)
+                {
+                    foreach (var key in profile.Environment.Keys.ToList())
+                    {
+                        profile.Environment[key] = ExpandWith(profile.Environment[key], ProjectLookup)!;
+                    }
+                }
+
+                string? ProfileLookup(string name) => name switch
+                {
+                    "project_name" => project.ProjectName,
+                    "base_dir" => project.BaseDirectory,
+                    _ => (profile.Environment != null && profile.Environment.TryGetValue(name, out var pv))
+                            ? pv
+                            : (project.Environment != null && project.Environment.TryGetValue(name, out var v))
+                                ? v
+                                : Environment.GetEnvironmentVariable(name)
+                };
+
+                string? Expand(string? value) => ExpandWith(value, ProfileLookup);
+                List<string>? ExpandList(List<string>? values) => values?.Select(v => Expand(v)!).ToList();
+
+                profile.Toolchain = Expand(profile.Toolchain);
+                profile.Arch = Expand(profile.Arch);
+                profile.BuildType = Expand(profile.BuildType);
                 profile.SourceDir = Expand(profile.SourceDir);
                 profile.OutputDir = Expand(profile.OutputDir);
                 profile.IncludeDirs = ExpandList(profile.IncludeDirs);

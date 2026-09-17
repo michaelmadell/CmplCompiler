@@ -75,6 +75,11 @@
                         "items": { "type": "string" },
                         "description": "Raw arguments passed directly to the compiler/tool."
                     },
+                    "environment": {
+                        "type": "object",
+                        "additionalProperties": { "type": "string" },
+                        "description": "Environment variables applied specifically to this profile's build processes. Overrides project-level environment."
+                    },
                     "pre_build": {
                         "type": "array",
                         "items": { "type": "string" },

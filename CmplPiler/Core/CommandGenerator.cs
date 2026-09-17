@@ -96,7 +96,9 @@ namespace CmplPiler.Core
                 "msvc" => "cl",
                 "gcc" => "g++",
                 "clang" => "clang++",
-                _ => profile.Toolchain!  // allow a custom compiler path
+                _ => profile.Toolchain!.Contains(' ') && !profile.Toolchain!.StartsWith('"')
+                    ? $"\"{profile.Toolchain}\""
+                    : profile.Toolchain!  // allow a custom compiler path
             };
 
             var args = new List<string>();
