@@ -28,6 +28,7 @@ namespace CmplPiler.Core
         /// <summary>Target architecture for MSVC tooling (x86, x64, arm64). Defaults to the host OS architecture.</summary>
         public string? Arch { get; set; }
         public string? SourceDir { get; set; }
+        public List<string>? Sources { get; set; }
         public string? OutputDir { get; set; }
         public List<string>? IncludeDirs { get; set; }
         public List<string>? Defines { get; set; }

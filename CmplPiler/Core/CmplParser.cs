@@ -132,6 +132,7 @@ namespace CmplPiler.Core
                 profile.Arch = Expand(profile.Arch);
                 profile.BuildType = Expand(profile.BuildType);
                 profile.SourceDir = Expand(profile.SourceDir);
+                profile.Sources = ExpandList(profile.Sources);
                 profile.OutputDir = Expand(profile.OutputDir);
                 profile.IncludeDirs = ExpandList(profile.IncludeDirs);
                 profile.Defines = ExpandList(profile.Defines);

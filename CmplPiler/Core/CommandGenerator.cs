@@ -118,8 +118,8 @@ namespace CmplPiler.Core
             string exeSuffix = OperatingSystem.IsWindows() ? ".exe" : "";
             string outputFile = Path.Combine(outputDir, $"{project.ProjectName}{exeSuffix}");
 
-            // Keep the glob outside the quotes so the shell expands it
-            args.Add($"\"{sourceDir}\"/*.cpp");
+            // Add source files or glob patterns
+            args.AddRange(ResolveSourceArguments(sourceDir, profile.Sources, baseDir));
             if (msvc)
             {
                 // Keep cl's .obj intermediates out of the working directory.
@@ -231,6 +231,92 @@ namespace CmplPiler.Core
 
             // On Linux/macOS msbuild ships inside the .NET SDK
             return new BuildTask { Command = "dotnet", Arguments = $"msbuild {finalArgs}", WorkingDirectory = baseDir };
+        }
+
+        private static List<string> ResolveSourceArguments(string sourceDir, List<string>? sources, string? baseDir)
+        {
+            var patterns = (sources != null && sources.Count > 0)
+                ? sources
+                : new List<string> { "*.cpp" };
+
+            var result = new List<string>();
+
+            foreach (var rawPattern in patterns)
+            {
+                string pattern = rawPattern.Replace('\\', '/');
+                bool hasWildcard = pattern.Contains('*') || pattern.Contains('?');
+
+                if (!hasWildcard)
+                {
+                    string fullPath = Resolve(Path.IsPathRooted(pattern) ? pattern : Path.Combine(sourceDir, pattern), baseDir);
+                    result.Add($"\"{fullPath}\"");
+                    continue;
+                }
+
+                bool resolvedAny = false;
+                if (Directory.Exists(sourceDir))
+                {
+                    try
+                    {
+                        string searchDir = sourceDir;
+                        string filePattern = pattern;
+                        SearchOption searchOption = SearchOption.TopDirectoryOnly;
+
+                        int globIndex = pattern.IndexOf("/**/", StringComparison.Ordinal);
+                        if (globIndex >= 0)
+                        {
+                            string sub = pattern[..globIndex];
+                            searchDir = Path.Combine(sourceDir, sub);
+                            filePattern = pattern[(globIndex + 4)..];
+                            searchOption = SearchOption.AllDirectories;
+                        }
+                        else if (pattern.StartsWith("**/", StringComparison.Ordinal))
+                        {
+                            filePattern = pattern[3..];
+                            searchOption = SearchOption.AllDirectories;
+                        }
+                        else if (pattern.Contains('/'))
+                        {
+                            int lastSlash = pattern.LastIndexOf('/');
+                            searchDir = Path.Combine(sourceDir, pattern[..lastSlash]);
+                            filePattern = pattern[(lastSlash + 1)..];
+                        }
+
+                        if (Directory.Exists(searchDir))
+                        {
+                            var files = Directory.GetFiles(searchDir, filePattern, searchOption);
+                            if (files.Length > 0)
+                            {
+                                foreach (var file in files.OrderBy(f => f))
+                                {
+                                    result.Add($"\"{Path.GetFullPath(file)}\"");
+                                }
+                                resolvedAny = true;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Fall back to pattern string on IO errors
+                    }
+                }
+
+                if (!resolvedAny)
+                {
+                    // Fall back to shell / compiler glob syntax
+                    if (pattern == "*.cpp")
+                    {
+                        result.Add($"\"{sourceDir}\"/*.cpp");
+                    }
+                    else
+                    {
+                        string fallback = Path.IsPathRooted(pattern) ? pattern : $"{sourceDir.TrimEnd('\\', '/')}/{pattern}";
+                        result.Add($"\"{fallback}\"");
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }

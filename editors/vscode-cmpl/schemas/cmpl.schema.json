@@ -79,6 +79,13 @@
             "type": "string",
             "description": "Path to the source code or solution/project file. Relative paths resolve against the .cmpl file's directory."
           },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Source files or glob patterns for 'direct' builds (e.g. *.cpp, **/*.cpp, main.cpp), relative to source_dir. Defaults to ['*.cpp']."
+          },
           "output_dir": {
             "type": "string",
             "description": "Path where the build artifacts will be placed. Created if missing. Relative paths resolve against the .cmpl file's directory."
