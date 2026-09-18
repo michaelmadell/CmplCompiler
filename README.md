@@ -1,4 +1,4 @@
-# CmplPiler
+# CmplCompiler
 
 *(pronounced "simple", /ˈsɪmpᵊl/ compiler)*
 
