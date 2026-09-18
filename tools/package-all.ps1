@@ -102,6 +102,17 @@ Copy-Item $LinuxTarDist $LinuxTarBuild -Force
 
 Write-Host "Created: $LinuxTarDist" -ForegroundColor Green
 
+# 5. Build Windows Inno Setup installer if available
+$IssScript = Join-Path $RepoRoot "CmplCompiler.iss"
+if (Test-Path $IssScript) {
+    Write-Host "Building Windows Inno Setup Installer..." -ForegroundColor Cyan
+    try {
+        & (Join-Path $ScriptDir "build-installer.ps1")
+    } catch {
+        Write-Warning "Failed to build Inno Setup installer: $($_.Exception.Message)"
+    }
+}
+
 # Clean up staging
 Remove-Item -Recurse -Force $StagingDir
 

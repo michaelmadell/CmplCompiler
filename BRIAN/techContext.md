@@ -94,12 +94,14 @@ dotnet publish CmplPiler -c Release -r win-x64 --self-contained /p:PublishSingle
 dotnet publish CmplPiler -c Release -r win-x64 -p:IncludeGui=false --self-contained /p:PublishSingleFile=true
 ```
 
-### 3. Packaging Scripts (`tools/`)
-The `tools/` directory provides matching `.ps1`, `.bat`, and `.sh` scripts:
+### 3. Packaging Scripts (`tools/` & `CmplCompiler.iss`)
+The `tools/` directory and root repository provide packaging automation:
 - `build-win-cli.*`: Compiles Windows CLI (`build/win-cli/cmpl.exe`).
 - `build-win-gui.*`: Compiles Windows GUI (`build/win-gui/cmpl.exe`).
+- `build-installer.ps1`: Compiles Inno Setup 7 installer (`dist/CmplCompiler-1.0.0-x64-Setup.exe`).
 - `build-linux-cli.*`: Compiles Linux CLI (`build/linux-cli/cmpl`).
-- `package-all.*`: Packages releases into `dist/cmpl-x86_64-win.zip` and `dist/cmpl-x86_64-linux.tar.gz`.
+- `package-all.*`: Packages releases into `dist/cmpl-x86_64-win.zip`, `dist/cmpl-x86_64-linux.tar.gz`, and the Windows Inno Setup installer.
+- `CmplCompiler.iss`: Inno Setup 7.1.0 script featuring modern wizard styling, dual CLI/GUI installation, PATH environment configuration, and `.cmpl` shell file associations.
 
 ---
 
