@@ -1,7 +1,7 @@
 # Project Brief: CmplPiler (cmpl)
 
 ## Executive Summary
-**CmplPiler** (`cmpl`) is a modern, cross-platform build orchestrator designed to streamline compiling and building software across heterogeneous build systems and compilers. It is driven by simple, declarative `.cmpl` (YAML) configuration files that define *what* to build through named profiles, while CmplPiler handles *how* to generate and execute the correct commands.
+**CmplPiler** (`cmpl`, pronounced *"simple", /ˈsɪmpᵊl/ compiler*) is a modern, cross-platform build orchestrator designed to streamline compiling and building software across heterogeneous build systems and compilers. It is driven by simple, declarative `.cmpl` (YAML) configuration files that define *what* to build through named profiles, while CmplPiler handles *how* to generate and execute the correct commands.
 
 The project is implemented in C# targeting **.NET 10**, structured as a single cohesive project that produces a single-file, self-contained executable for each target platform.
 

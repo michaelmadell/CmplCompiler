@@ -1,5 +1,7 @@
 # CmplPiler
 
+*(pronounced "simple", /ˈsɪmpᵊl/ compiler)*
+
 A build orchestrator driven by simple, declarative `.cmpl` (YAML) project
 files. Describe *what* to build in named profiles; CmplPiler generates and
 runs the right commands for direct compiler invocation, CMake, the .NET CLI,
