@@ -2,7 +2,7 @@
 ; CmplCompiler Windows Installer
 
 #define MyAppName "CmplCompiler"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.0.2"
 #define MyAppPublisher "Michael Madell"
 #define MyAppURL "https://github.com/michaelmadell/CmplCompiler"
 #define MyAppExeName "cmpl.exe"
@@ -37,11 +37,11 @@ ChangesAssociations=yes
 CloseApplications=yes
 RestartApplications=no
 UninstallDisplayIcon={app}\{#MyAppGuiExeName}
-VersionInfoVersion=1.0.0.0
+VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} Setup
 VersionInfoProductName={#MyAppName}
-VersionInfoProductVersion=1.0.0.0
+VersionInfoProductVersion={#MyAppVersion}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

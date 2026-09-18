@@ -17,6 +17,12 @@
     <StartupObject>CmplPiler.Program</StartupObject>
     <!-- Allows compiling (not running) the Windows target on Linux/macOS build agents -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <FileVersion>1.0.0.2</FileVersion>
+    <AssemblyVersion>1.0.0.2</AssemblyVersion>
+    <Version>1.0.0.2</Version>
+    <Authors>Michael Madell</Authors>
+    <Product>Cmpl Compiler</Product>
+    <Title>Cmpl Compiler</Title>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
